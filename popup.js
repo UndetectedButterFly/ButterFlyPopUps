@@ -1,43 +1,43 @@
 let popupLinks;  // Все кнопки, вызывающие всплывающие окна
 let popupClosers;  // Все кнопки для закрытия всплывающих окон
 
-let unlock = true;
+var scrollValue;  // Переменная для сохранения скролла, т.к он блокируется при открытии popup
 
-const timeout = 800;
+let unlock = true;  // Индикатор, предотвращающий множественные открытия после нескольких кликов
 
-////////////////////////////////////////
-// lockPadding не работает на .lock-pd//
-// - fix lockPadding                  //
-// - need more tests                  //
-////////////////////////////////////////
+const timeout = 800;  // Скорость анимации transition, которая указывает когда разблокировать скролл
 
 $(document).ready(function(){
     const popupLinks = $('.popup-link');
     const popupClosers = $('.popup__close');
-    const body = $('body');
-    const lockPadding = $('.lock-pd');
 
-    if( popupLinks ){
+    // Обрабатываем клик на кнопку, открывающую popup
+    if( popupLinks.length ){
         popupLinks.each(function(){
             $(this).on('click', function() {
                 let link = '#' + $(this).attr('id') + '.popup';
                 let popup = $(link);
                 
+                // Сохраняем значение скролла, чтобы при закрытии переместить пользователя к предыдущей точке
+                scrollValue = $('html').scrollTop();
+
                 popupOpen(popup);
             })
         });
     }
 
-    if( popupClosers ){
+    // Обрабатываем клик на кнопку, закрывающую popup
+    if( popupClosers.length ){
         popupClosers.each(function(){
             $(this).on('click', function(){
                 let popup = $(this).closest('.popup');
 
                 popupClose(popup);
-            })
+            });
         });
     }
 
+    // Обрабатываем закрытие popup на клавишу ESC
     $(document).on('keydown', function(event){
         if( event.which === 27){
             popupClose($('.popup.active'));
@@ -49,6 +49,7 @@ $(document).ready(function(){
 function popupOpen(popup){
     if( popup && unlock ) {
         const popupActive = $('.popup.active');
+
         if( popupActive.length ){
             popupClose(popupActive, false);
         } else {
@@ -75,6 +76,7 @@ function popupClose(popup, doUnlock = true){
 }
 
 function bodyLock(){
+    $('body').css('--st', -($(document).scrollTop()) + 'px');
     $('body').addClass('lock');
 
     unlock = false;
@@ -86,6 +88,7 @@ function bodyLock(){
 function bodyUnlock(){
     setTimeout(function(){
         $('body').removeClass('lock');
+        $('html').scrollTop(scrollValue);
     }, timeout);
 
     unlock = false;
